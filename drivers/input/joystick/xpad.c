@@ -118,8 +118,8 @@ static bool auto_poweroff = true;
 module_param(auto_poweroff, bool, S_IWUSR | S_IRUGO);
 MODULE_PARM_DESC(auto_poweroff, "Power off wireless controllers on suspend");
 
-static unsigned int xpad_poll_interval;
-module_param_named(cpoll, xpad_poll_interval, uint, S_IWUSR | S_IRUGO);
+static unsigned int cpoll = 0;
+module_param(cpoll, uint, S_IWUSR | S_IRUGO);
 MODULE_PARM_DESC(cpoll, "Polling interval (ms) of XInput controllers");
 
 static const struct xpad_device {
@@ -1116,6 +1116,7 @@ static int xpad_init_output(struct usb_interface *intf, struct usb_xpad *xpad,
 	}
 
 	interval = cpoll > 0 ? cpoll : ep_irq_out->bInterval;
+	pr_info("XPAD: original out->bInterval=%d, new interval=%d\n", ep_irq_out->bInterval, interval);
 
 	usb_fill_int_urb(xpad->irq_out, xpad->udev,
 			 usb_sndintpipe(xpad->udev, ep_irq_out->bEndpointAddress),
@@ -1825,6 +1826,7 @@ static int xpad_probe(struct usb_interface *intf, const struct usb_device_id *id
      * Tests show the kernel will still poll at a higher rate if the value is too high (slow rate) on some controllers.
      */
 	interval = cpoll > 0 ? cpoll : ep_irq_in->bInterval;
+	pr_info("XPAD: original in->bInterval=%d, new interval=%d\n", ep_irq_in->bInterval, interval);
 
 	usb_fill_int_urb(xpad->irq_in, udev,
 			 usb_rcvintpipe(udev, ep_irq_in->bEndpointAddress),
