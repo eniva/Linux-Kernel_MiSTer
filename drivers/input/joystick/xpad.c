@@ -120,7 +120,7 @@ MODULE_PARM_DESC(auto_poweroff, "Power off wireless controllers on suspend");
 
 static unsigned int cpoll = 0;
 module_param(cpoll, uint, S_IWUSR | S_IRUGO);
-MODULE_PARM_DESC(cpoll, "Polling interval (ms) of XInput controllers");
+MODULE_PARM_DESC(cpoll, "Polling interval of XInput controllers");
 
 static const struct xpad_device {
 	u16 idVendor;
@@ -129,7 +129,8 @@ static const struct xpad_device {
 	u8 mapping;
 	u8 xtype;
 } xpad_device[] = {
-	{ 0x2c22, 0x2303, "Qanba Obsidian Arcade Joystick", 0, XTYPE_XBOXONE }, /* The left and right triggers share the same Z-axis on PC mode (XInput) = Xbox One */
+	/* The left and right triggers share the same Z-axis on PC mode (XInput) = Xbox One */
+	{ 0x2c22, 0x2303, "Qanba Obsidian Arcade Joystick", 0, XTYPE_XBOX360 },  /* Works better in XBOX360 */
 	{ 0x0079, 0x18d4, "GPD Win 2 X-Box Controller", 0, XTYPE_XBOX360 },
 	{ 0x044f, 0x0f00, "Thrustmaster Wheel", 0, XTYPE_XBOX },
 	{ 0x044f, 0x0f03, "Thrustmaster Wheel", 0, XTYPE_XBOX },
@@ -417,8 +418,8 @@ static const signed short xpad_abs_triggers[] = {
 	{ XPAD_XBOXONE_VENDOR_PROTOCOL((vend), 208) }
 
 static const struct usb_device_id xpad_table[] = {
-	XPAD_XBOXONE_VENDOR(0x2c22),		/* Qanba Joysticks */
 	{ USB_INTERFACE_INFO('X', 'B', 0) },	/* X-Box USB-IF not approved class */
+	XPAD_XBOX360_VENDOR(0x2c22),		/* Qanba Joysticks */
 	XPAD_XBOX360_VENDOR(0x0079),		/* GPD Win 2 Controller */
 	XPAD_XBOX360_VENDOR(0x044f),		/* Thrustmaster X-Box 360 controllers */
 	XPAD_XBOX360_VENDOR(0x045e),		/* Microsoft X-Box 360 controllers */
@@ -1117,7 +1118,7 @@ static int xpad_init_output(struct usb_interface *intf, struct usb_xpad *xpad,
 	}
 
 	interval = cpoll > 0 ? cpoll : ep_irq_out->bInterval;
-	pr_info("XPAD: original out->bInterval=%d, new interval=%d\n", ep_irq_out->bInterval, interval);
+	pr_info("XPAD: original out.bInterval=%d -> new interval=%d\n", ep_irq_out->bInterval, interval);
 
 	usb_fill_int_urb(xpad->irq_out, xpad->udev,
 			 usb_sndintpipe(xpad->udev, ep_irq_out->bEndpointAddress),
@@ -1740,6 +1741,7 @@ static int xpad_probe(struct usb_interface *intf, const struct usb_device_id *id
 			break;
 	}
 
+
 	xpad = kzalloc(sizeof(struct usb_xpad), GFP_KERNEL);
 	if (!xpad)
 		return -ENOMEM;
@@ -1827,7 +1829,7 @@ static int xpad_probe(struct usb_interface *intf, const struct usb_device_id *id
      * Tests show the kernel will still poll at a higher rate if the value is too high (slow rate) on some controllers.
      */
 	interval = cpoll > 0 ? cpoll : ep_irq_in->bInterval;
-	pr_info("XPAD: original in->bInterval=%d, new interval=%d\n", ep_irq_in->bInterval, interval);
+	pr_info("XPAD: original in.bInterval=%d -> new interval=%d\n", ep_irq_in->bInterval, interval);
 
 	usb_fill_int_urb(xpad->irq_in, udev,
 			 usb_rcvintpipe(udev, ep_irq_in->bEndpointAddress),
